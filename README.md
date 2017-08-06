@@ -56,7 +56,7 @@ Show individual node information:
     
 Remove couple of nodes:
 
-    testnet> inspect d34db33f1001 3f1001d34db3
+    testnet> remove d34db33f1001 3f1001d34db3
 
 Stop a network and quit:
 
