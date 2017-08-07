@@ -1,10 +1,8 @@
 import os
-import shutil
 import time
 import random
 import string
 
-import docker 
 import requests
 
 from testnet import i2pcontrol
@@ -37,6 +35,7 @@ class I2pd(object):
 
     @property
     def ctl_token(self):
+        """Cached i2pcontrol authentication token"""
         if not self._ctl_token:
             self._ctl_token = i2pcontrol.get_token(self.URLS['Control'])
         return self._ctl_token
@@ -54,10 +53,10 @@ class I2pd(object):
         """String with verbose i2pd info"""
         info = self.info()
         if not info:
-            return "{}\t{}\tNOT READY".format(self.container.id[:11], self.ip)
+            return "{}\t{}\tNOT READY".format(self.id, self.ip)
 
         return "\t".join([
-            self.container.id[:11], self.ip,
+            self.id, self.ip,
             i2pcontrol.STATUS[info["i2p.router.net.status"]],
             str(info["i2p.router.net.tunnels.successrate"]) + "%",
             "{}/{}".format(
@@ -72,7 +71,7 @@ class I2pd(object):
         ])
 
     def __str__(self):
-        return "i2pd node: {}  IP: {}".format(self.container.id[:11], self.ip)
+        return "i2pd node: {}  IP: {}".format(self.id, self.ip)
 
 class Testnet(object):
     """Testnet object"""
@@ -92,10 +91,12 @@ class Testnet(object):
         self.cli = docker_client
 
     def create_network(self):
+        """Create isolated docker network"""
         self.net = self.cli.networks.create(self.NETNAME, driver="bridge",
                 internal=True)
 
     def remove_network(self):
+        """Remove docker network"""
         self.net.remove()
 
     def run_i2pd(self, args=None, with_cert=True):
@@ -127,7 +128,7 @@ class Testnet(object):
         node.container.stop()
         node.container.remove()
 
-    def init_floodfills(self, count):
+    def init_floodfills(self, count=1):
         """Initialize floodfills for reseeding"""
         for x in range(count):
             cid = self.run_i2pd(" --floodfill ", with_cert=False)
@@ -136,6 +137,7 @@ class Testnet(object):
                 self.cli.containers.get(cid).attrs["Mounts"][0]["Source"], 
                 "router.info"
             ))
+            time.sleep(1)
 
     def run_pyseeder(self):
         """Run reseed"""
@@ -163,7 +165,6 @@ class Testnet(object):
             "CONTAINER", "IP", "STATUS", "SUCC RATE", "PEERS K/A", "BYTES S/R",
                 "PART. TUNNELS"
         ]))
-        if not self.NODES: return
 
         for n in self.NODES:
             print(n.info_str())

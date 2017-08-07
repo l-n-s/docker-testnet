@@ -1,4 +1,3 @@
-import sys
 import time
 import warnings
 from pprint import pprint
@@ -23,8 +22,7 @@ TestnetCompleter = WordCompleter(['help', 'quit', 'start', 'stats', 'stop',
 def start(testnet):
     """Start testnet"""
     testnet.create_network()
-    testnet.init_floodfills(1)
-    time.sleep(10)
+    testnet.init_floodfills()
     testnet.run_pyseeder()
     print("*** Testnet is running")
 
@@ -83,6 +81,7 @@ def print_help():
     add \t{}
     remove \t{}
     inspect \t{}
+    quit\tStop testnet and quit
     """.format(
         print_help.__doc__, 
         start.__doc__, 
@@ -117,10 +116,9 @@ def main():
         elif command[0]     == "stop" or command[0] == "quit":
             if testnet.NODES: stop(testnet)
             if command[0] == "quit": break
-        elif not testnet.NODES:
-            if command[0]   == "start":
-                start(testnet)
-        else:
+        elif command[0]     == "start":
+            if not testnet.NODES: start(testnet)
+        elif testnet.NODES:
             if command[0]   == "stats":
                 stats(testnet)
             elif command[0] == "add":
