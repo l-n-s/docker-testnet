@@ -1,11 +1,11 @@
 docker testnet
 ==============
 
-Run and manage your own local I2P network with docker.
+Run and manage your own local [I2P network](http://i2pd.website) with Docker.
 
 
-Install
--------
+Installing
+----------
 
 Install requirements and add your user to docker group ([security notes](https://docs.docker.com/engine/installation/linux/linux-postinstall/)):
 
