@@ -31,21 +31,13 @@ class I2pd(object):
                 'Socks': "{}:4447".format(self.ip),        
             },
         }
-        self._ctl_token = None
-
-    @property
-    def ctl_token(self):
-        """Cached i2pcontrol authentication token"""
-        if not self._ctl_token:
-            self._ctl_token = i2pcontrol.get_token(self.URLS['Control'])
-        return self._ctl_token
-
+        self.control = i2pcontrol.I2PControl(self.URLS['Control'])
 
     def info(self):
         """Fetch info from i2pcontrol"""
         try:
-            return i2pcontrol.request(self.URLS['Control'], self.ctl_token, 
-                    "RouterInfo", i2pcontrol.INFO_REQUEST)['result']
+            return self.control.request("RouterInfo", 
+                    i2pcontrol.INFO_REQUEST)['result']
         except requests.exceptions.ConnectionError:
             return {}
 
