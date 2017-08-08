@@ -17,7 +17,7 @@ class I2pd(object):
     """i2pd node object"""
     def __init__(self, container, netname):
         container.reload()
-        self.id = container.id[:11]
+        self.id = container.id[:12]
         self.container = container
         self.netname = netname
         self.ip = container.attrs['NetworkSettings']['Networks'][

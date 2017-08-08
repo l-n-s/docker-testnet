@@ -45,7 +45,7 @@ def add(testnet, count=1, floodfill=False):
 
     for x in range(count):
         cid = testnet.run_i2pd(args)
-        print(cid[:11])
+        print(cid[:12])
 
     print("*** Added {} nodes".format(count))
 
