@@ -24,6 +24,7 @@ def start(testnet):
     if not testnet.NODES:
         testnet.create_network()
         testnet.init_floodfills()
+        time.sleep(5)
         testnet.run_pyseeder()
     print("*** Testnet is running")
 
@@ -40,9 +41,9 @@ def stop(testnet):
 
 def add(testnet, count=1, floodfill=False):
     """Add node(s) to testnet. Usage: add [count=1] [floodfill=False]"""
-    if not self.NODES: return
+    if not testnet.NODES: return
     count, floodfill = int(count), bool(floodfill)
-    args = " --reseed.urls={} ".format(testnet.RESEED_URL)
+    args = " --reseed.urls={} ".format(testnet.PYSEEDER.url)
 
     if floodfill: args += " --floodfill "
 

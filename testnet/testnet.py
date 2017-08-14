@@ -1,5 +1,4 @@
 import os
-import time
 import random
 import string
 
@@ -65,6 +64,34 @@ class I2pd(object):
     def __str__(self):
         return "i2pd node: {}  IP: {}".format(self.id, self.ip)
 
+class Pyseeder(object):
+    """Pyseeder object"""
+
+    def __init__(self, container, netname):
+        self.container = container
+        self.netname = netname
+        self._url, self._cert = "", ""
+
+    @property
+    def url(self):
+        """URL of https server"""
+        if not self._url:
+            self.container.reload()
+            self._url = "https://{}:8443/".format(self.container.attrs[
+                'NetworkSettings']['Networks'][self.netname]['IPAddress'])
+        return self._url
+
+    @property
+    def cert(self):
+        """certificate path"""
+        if not self._cert:
+            for m in self.container.attrs['Mounts']:
+                if m['Destination'] == '/home/pyseeder/data':
+                    self._cert = os.path.join(
+                                m['Source'], 'data', 'test_at_mail.i2p.crt')
+
+        return self._cert
+
 class Testnet(object):
     """Testnet object"""
 
@@ -72,11 +99,7 @@ class Testnet(object):
     PYSEEDER_IMAGE = "pyseeder"
     NETNAME = 'i2pdtestnet'
     NODES = {}
-    FLOODFILLS = []
-    FF_RIS = []
-    PYSEEDER_CONTAINER = ""
-    RESEED_URL = ""
-    RESEED_CERT = ""
+    PYSEEDER = None
     DEFAULT_ARGS = " --nat=false --netid=7 --ifname=eth0 --i2pcontrol.enabled=true --i2pcontrol.address=0.0.0.0 "
 
     def __init__(self, docker_client):
@@ -101,7 +124,7 @@ class Testnet(object):
                     network=self.NETNAME,
                     volumes=[
                     '{}:/i2pd_certificates/reseed/test_at_mail.i2p.crt'.format(
-                                                            self.RESEED_CERT)],
+                                                        self.PYSEEDER.cert)],
                     detach=True, tty=True)
         else:
             cont = self.cli.containers.run(self.I2PD_IMAGE, i2pd_args,
@@ -122,33 +145,19 @@ class Testnet(object):
     def init_floodfills(self, count=1):
         """Initialize floodfills for reseeding"""
         for x in range(count):
-            cid = self.run_i2pd(" --floodfill ", with_cert=False)
-            self.FLOODFILLS.append(cid)
-            self.FF_RIS.append(os.path.join(
-                self.cli.containers.get(cid).attrs["Mounts"][0]["Source"], 
-                "router.info"
-            ))
-            time.sleep(1)
+            self.run_i2pd(" --floodfill ", with_cert=False)
 
     def run_pyseeder(self):
         """Run reseed"""
         volumes = []
-        for ri in self.FF_RIS:
+        for n in self.NODES.values():
+            ri = os.path.join(n.container.attrs["Mounts"][0]["Source"],
+                    "router.info")
             volumes.append('{}:/netDb/{}.dat'.format(ri, rand_string()))
 
         cont = self.cli.containers.run(self.PYSEEDER_IMAGE, volumes=volumes,
                 network=self.NETNAME, detach=True, tty=True)
-        self.PYSEEDER_CONTAINER = cont.id
-        time.sleep(5)
-        cont.reload()
-
-        self.RESEED_URL = "https://{}:8443/".format(cont.attrs[
-            'NetworkSettings']['Networks'][self.NETNAME]['IPAddress'])
-        for m in cont.attrs['Mounts']:
-            if m['Destination'] == '/home/pyseeder/data':
-                self.RESEED_CERT = os.path.join(
-                    m['Source'], 'data', 'test_at_mail.i2p.crt')
-                break
+        self.PYSEEDER = Pyseeder(cont, self.NETNAME)
 
     def print_info(self):
         """Print testnet statistics"""
@@ -165,15 +174,13 @@ class Testnet(object):
 
     def stop(self):
         """Stop nodes and reseeder"""
-        if self.PYSEEDER_CONTAINER:
-            cont = self.cli.containers.get(self.PYSEEDER_CONTAINER)
-            cont.stop()
-            cont.remove()
+        if self.PYSEEDER:
+            self.PYSEEDER.container.stop()
+            self.PYSEEDER.container.remove()
+            self.PYSEEDER = None
 
         for n in self.NODES.values():
             n.container.stop()
             n.container.remove()
 
         self.NODES.clear()
-
-
