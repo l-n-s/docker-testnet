@@ -152,13 +152,16 @@ class Testnet(object):
 
     def print_info(self):
         """Print testnet statistics"""
-        print("\t".join([
-            "CONTAINER", "IP", "STATUS", "SUCC RATE", "PEERS K/A", "BYTES S/R",
-                "PART. TUNNELS"
-        ]))
+        if self.NODES:
+            print("\t".join([
+                "CONTAINER", "IP", "STATUS", "SUCC RATE", "PEERS K/A", 
+                "BYTES S/R", "PART. TUNNELS"
+            ]))
 
-        for n in self.NODES.values():
-            print(n.info_str())
+            for n in self.NODES.values():
+                print(n.info_str())
+        else:
+            print("Testnet is not running")
 
     def stop(self):
         """Stop nodes and reseeder"""

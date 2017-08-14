@@ -21,9 +21,10 @@ TestnetCompleter = WordCompleter(['help', 'quit', 'start', 'stats', 'stop',
 
 def start(testnet):
     """Start testnet"""
-    testnet.create_network()
-    testnet.init_floodfills()
-    testnet.run_pyseeder()
+    if not testnet.NODES:
+        testnet.create_network()
+        testnet.init_floodfills()
+        testnet.run_pyseeder()
     print("*** Testnet is running")
 
 def stats(testnet):
@@ -32,12 +33,14 @@ def stats(testnet):
     
 def stop(testnet):
     """Stop testnet"""
-    testnet.stop()
-    testnet.remove_network()
+    if testnet.NODES:
+        testnet.stop()
+        testnet.remove_network()
     print("*** Testnet stopped")
 
 def add(testnet, count=1, floodfill=False):
     """Add node(s) to testnet. Usage: add [count=1] [floodfill=False]"""
+    if not self.NODES: return
     count, floodfill = int(count), bool(floodfill)
     args = " --reseed.urls={} ".format(testnet.RESEED_URL)
 
@@ -111,25 +114,24 @@ def main():
 
         command = inpt.split()
 
-        if command[0]       == "help":
+        if command[0]   == "help":
             print_help()
-        elif command[0]     == "stop" or command[0] == "quit":
-            if testnet.NODES: stop(testnet)
+        elif command[0] == "stop" or command[0] == "quit":
+            stop(testnet)
             if command[0] == "quit": break
-        elif command[0]     == "start":
-            if not testnet.NODES: start(testnet)
-        elif testnet.NODES:
-            if command[0]   == "stats":
-                stats(testnet)
-            elif command[0] == "add":
-                args = command[1:] if len(command) > 1 else []
-                add(testnet, *args)
-            elif command[0] == "remove":
-                if len(command) < 2: continue
-                remove(testnet, command[1:])
-            elif command[0] == "inspect":
-                if len(command) != 2: continue
-                inspect(testnet, command[1])
+        elif command[0] == "start":
+            start(testnet)
+        elif command[0] == "stats":
+            stats(testnet)
+        elif command[0] == "add":
+            args = command[1:] if len(command) > 1 else []
+            add(testnet, *args)
+        elif command[0] == "remove":
+            if len(command) < 2: continue
+            remove(testnet, command[1:])
+        elif command[0] == "inspect":
+            if len(command) != 2: continue
+            inspect(testnet, command[1])
 
 if __name__ == "__main__":
     main()
