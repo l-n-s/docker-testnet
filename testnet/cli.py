@@ -60,8 +60,8 @@ def remove(testnet, ids):
 def inspect(testnet, cid):
     """Show node information. Usage: inspect [id]"""
     try:
-        node = [n for n in testnet.NODES if n.id == cid][0]
-    except IndexError:
+        node = testnet.NODES[cid]
+    except KeyError:
         warnings.warn("No such container")
         return
 

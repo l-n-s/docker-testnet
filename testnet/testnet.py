@@ -71,7 +71,7 @@ class Testnet(object):
     I2PD_IMAGE = "i2pd"
     PYSEEDER_IMAGE = "pyseeder"
     NETNAME = 'i2pdtestnet'
-    NODES = []
+    NODES = {}
     FLOODFILLS = []
     FF_RIS = []
     PYSEEDER_CONTAINER = ""
@@ -106,17 +106,16 @@ class Testnet(object):
         else:
             cont = self.cli.containers.run(self.I2PD_IMAGE, i2pd_args,
                     network=self.NETNAME, detach=True, tty=True)
-        self.NODES.append(I2pd(cont, self.NETNAME))
+        self.NODES[cont.id[:12]] = I2pd(cont, self.NETNAME)
         return cont.id
 
     def remove_i2pd(self, cid):
         """Stop and remove i2pd"""
         try:
-            node = [n for n in self.NODES if n.id == cid][0]
-        except IndexError:
+            node = self.NODES.pop(cid)
+        except KeyError:
             return
 
-        self.NODES.remove(node)
         node.container.stop()
         node.container.remove()
 
@@ -158,7 +157,7 @@ class Testnet(object):
                 "PART. TUNNELS"
         ]))
 
-        for n in self.NODES:
+        for n in self.NODES.values():
             print(n.info_str())
 
     def stop(self):
@@ -168,7 +167,7 @@ class Testnet(object):
             cont.stop()
             cont.remove()
 
-        for n in self.NODES:
+        for n in self.NODES.values():
             n.container.stop()
             n.container.remove()
 
