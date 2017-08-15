@@ -58,6 +58,10 @@ Remove couple of nodes:
 
     testnet> remove d34db33f1001 3f1001d34db3
 
+Create I2P tunnel (options are specified exactly as `key=value` without spaces):
+
+    testnet> create_tunnel d34db33f1001 test-tunnel type=http host=127.0.0.1 port=8888 keys=test.dat
+
 Stop a network and quit:
 
     testnet> stop

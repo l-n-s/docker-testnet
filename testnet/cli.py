@@ -17,7 +17,7 @@ __version__ = "0.1"
 
 history = InMemoryHistory()
 TestnetCompleter = WordCompleter(['help', 'quit', 'start', 'stats', 'stop',
-    'add', 'remove', 'inspect'])
+    'add', 'create_tunnel', 'remove', 'inspect'])
 
 
 def start(testnet):
@@ -54,6 +54,18 @@ def add(testnet, count=1, floodfill=False):
 
     print("*** Added {} nodes".format(count))
 
+def create_tunnel(testnet, cid, name, args):
+    """Create tunnel. Usage: [id] [name] [option=value] ..."""
+    node = testnet.NODES[cid]
+    options = {}
+    for x in args:
+        k, v = x.split("=")
+        options[k] = v
+
+    node.add_tunnel(name, options)
+    time.sleep(1)
+    print("*** Tunnel created: {}".format(node.tunnel_destinations()[-1]))
+
 def remove(testnet, ids):
     """Remove node(s) from testnet. Usage: remove [id] ..."""
     for n in ids:
@@ -84,6 +96,7 @@ def print_help():
     stats\t{}
     stop\t{}
     add \t{}
+    create_tunnel \t{}
     remove \t{}
     inspect \t{}
     quit\tStop testnet and quit
@@ -93,6 +106,7 @@ def print_help():
         stats.__doc__,
         stop.__doc__, 
         add.__doc__,
+        create_tunnel.__doc__,
         remove.__doc__,
         inspect.__doc__,)
     )
@@ -135,6 +149,9 @@ def main():
         elif command[0] == "add":
             args = command[1:] if len(command) > 1 else []
             add(testnet, *args)
+        elif command[0] == "create_tunnel":
+            if len(command) < 7: continue
+            create_tunnel(testnet, command[1], command[2], command[3:])
         elif command[0] == "remove":
             if len(command) < 2: continue
             remove(testnet, command[1:])
