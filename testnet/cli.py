@@ -1,3 +1,4 @@
+import os
 import time
 import warnings
 from pprint import pprint
@@ -101,6 +102,13 @@ def main():
     cli = docker.DockerClient(base_url='unix://var/run/docker.sock', 
             version='auto')
     testnet = Testnet(cli)
+
+    if os.getenv("I2PD_IMAGE"):
+        testnet.I2PD_IMAGE = os.getenv("I2PD_IMAGE")
+    if os.getenv("NETNAME"):
+        testnet.NETNAME = os.getenv("NETNAME")
+    if os.getenv("DEFAULT_ARGS"):
+        testnet.DEFAULT_ARGS = os.getenv("DEFAULT_ARGS")
 
     while 1:
         try:

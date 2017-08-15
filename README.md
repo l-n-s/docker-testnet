@@ -63,3 +63,13 @@ Stop a network and quit:
     testnet> stop
     testnet> quit
 
+
+Configuration
+-------------
+
+Takes environment variables for configuration:
+
+    I2PD_IMAGE   -  docker image to use
+    NETNAME      -  docker network name
+    DEFAULT_ARGS -  default arguments for binary
+
