@@ -133,6 +133,9 @@ def main():
         elif command[0] == "inspect":
             if len(command) != 2: continue
             inspect(testnet, command[1])
+        elif command[0] == "root":
+            import pdb; pdb.set_trace() 
+
 
 if __name__ == "__main__":
     main()

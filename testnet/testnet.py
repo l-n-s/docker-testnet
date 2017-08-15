@@ -61,6 +61,26 @@ class I2pd(object):
             str(info["i2p.router.net.tunnels.participating"]),
         ])
 
+    def add_tunnel(self, name, options):
+        """Add I2P tunnel"""
+        args_str = ""
+        for k, v in options.items():
+            args_str += "{} = {}\n".format(k, v)
+
+        cmd = '/bin/sh -c \'printf "\n[{}]\n{}\n"'.format(name, args_str) + \
+            ' >> /home/i2pd/data/tunnels.conf\''
+        self.container.exec_run(cmd)
+        self.container.exec_run("kill -HUP 1")
+
+    def tunnel_destinations(self):
+        """Get b32 destinations"""
+        destinations = []
+        for x in self.container.logs().split(b"\r\n"):
+            if b"New private keys file" in x:
+                destinations.append(x.split(b" ")[-2].decode())
+        return destinations
+
+
     def __str__(self):
         return "i2pd node: {}  IP: {}".format(self.id, self.ip)
 
@@ -100,7 +120,8 @@ class Testnet(object):
     NETNAME = 'i2pdtestnet'
     NODES = {}
     PYSEEDER = None
-    DEFAULT_ARGS = " --nat=false --netid=7 --ifname=eth0 --i2pcontrol.enabled=true --i2pcontrol.address=0.0.0.0 "
+    DEFAULT_ARGS = " --nat=false --netid=7 --ifname=eth0 " \
+                   " --i2pcontrol.enabled=true --i2pcontrol.address=0.0.0.0 "
 
     def __init__(self, docker_client):
         self.cli = docker_client
