@@ -55,7 +55,7 @@ def add(testnet, count=1, floodfill=False):
     print("*** Added {} nodes".format(count))
 
 def create_tunnel(testnet, cid, name, args):
-    """Create tunnel. Usage: [id] [name] [option=value] ..."""
+    """Create I2P tunnel. Usage: create_tunnel [id] [name] [option=value] ..."""
     node = testnet.NODES[cid]
     options = {}
     for x in args:
