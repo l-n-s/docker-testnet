@@ -1,6 +1,9 @@
 import os
 import random
 import string
+import tarfile
+import zipfile
+import tempfile
 
 import requests
 
@@ -84,44 +87,16 @@ class I2pd(object):
     def __str__(self):
         return "i2pd node: {}  IP: {}".format(self.id, self.ip)
 
-class Pyseeder(object):
-    """Pyseeder object"""
-
-    def __init__(self, container, netname):
-        self.container = container
-        self.netname = netname
-        self._url, self._cert = "", ""
-
-    @property
-    def url(self):
-        """URL of https server"""
-        if not self._url:
-            self.container.reload()
-            self._url = "https://{}:8443/".format(self.container.attrs[
-                'NetworkSettings']['Networks'][self.netname]['IPAddress'])
-        return self._url
-
-    @property
-    def cert(self):
-        """certificate path"""
-        if not self._cert:
-            for m in self.container.attrs['Mounts']:
-                if m['Destination'] == '/home/pyseeder/data':
-                    self._cert = os.path.join(
-                                m['Source'], 'data', 'test_at_mail.i2p.crt')
-
-        return self._cert
 
 class Testnet(object):
     """Testnet object"""
 
     I2PD_IMAGE = "i2pd"
-    PYSEEDER_IMAGE = "pyseeder"
     NETNAME = 'i2pdtestnet'
     NODES = {}
-    PYSEEDER = None
     DEFAULT_ARGS = " --nat=false --netid=7 --ifname=eth0 " \
                    " --i2pcontrol.enabled=true --i2pcontrol.address=0.0.0.0 "
+    SEED_FILE = os.path.join(tempfile.gettempdir(), 'seed.zip')
 
     def __init__(self, docker_client):
         self.cli = docker_client
@@ -135,18 +110,15 @@ class Testnet(object):
         """Remove docker network"""
         self.net.remove()
 
-    def run_i2pd(self, args=None, with_cert=True):
+    def run_i2pd(self, args=None, with_seed=True):
         """Start i2pd"""
         i2pd_args = self.DEFAULT_ARGS
         if args: i2pd_args += args
 
-        if with_cert:
-            cont = self.cli.containers.run(self.I2PD_IMAGE, i2pd_args, 
-                    network=self.NETNAME,
-                    volumes=[
-                    '{}:/i2pd_certificates/reseed/test_at_mail.i2p.crt'.format(
-                                                        self.PYSEEDER.cert)],
-                    detach=True, tty=True)
+        if with_seed:
+            cont = self.cli.containers.run(self.I2PD_IMAGE, i2pd_args,
+                    volumes=["{}:/seed.zip".format(self.SEED_FILE)],
+                    network=self.NETNAME, detach=True, tty=True)
         else:
             cont = self.cli.containers.run(self.I2PD_IMAGE, i2pd_args,
                     network=self.NETNAME, detach=True, tty=True)
@@ -166,19 +138,25 @@ class Testnet(object):
     def init_floodfills(self, count=1):
         """Initialize floodfills for reseeding"""
         for x in range(count):
-            self.run_i2pd(" --floodfill ", with_cert=False)
+            self.run_i2pd(" --floodfill ", with_seed=False)
 
-    def run_pyseeder(self):
-        """Run reseed"""
-        volumes = []
-        for n in self.NODES.values():
-            ri = os.path.join(n.container.attrs["Mounts"][0]["Source"],
-                    "router.info")
-            volumes.append('{}:/netDb/{}.dat'.format(ri, rand_string()))
+    def make_seed(self):
+        """creates a zip reseed file"""
+        floodfill_node = list(self.NODES.keys())[0]
 
-        cont = self.cli.containers.run(self.PYSEEDER_IMAGE, volumes=volumes,
-                network=self.NETNAME, detach=True, tty=True)
-        self.PYSEEDER = Pyseeder(cont, self.NETNAME)
+        with tempfile.TemporaryFile() as fp:
+            fp.write(self.NODES[floodfill_node].container.get_archive(
+                        "/home/i2pd/data/router.info")[0].read())
+            fp.seek(0)
+            ri_file = tarfile.open(fileobj=fp, mode='r:')\
+                    .extractfile("router.info").read()
+            tf = tempfile.mkstemp()[1]
+            with open(tf, 'wb') as f: f.write(ri_file)
+
+            zf = zipfile.ZipFile(self.SEED_FILE, "w")
+            zf.write(tf, "routerinfo.dat")
+            zf.close()
+            os.remove(tf)
 
     def print_info(self):
         """Print testnet statistics"""
@@ -195,13 +173,9 @@ class Testnet(object):
 
     def stop(self):
         """Stop nodes and reseeder"""
-        if self.PYSEEDER:
-            self.PYSEEDER.container.stop()
-            self.PYSEEDER.container.remove()
-            self.PYSEEDER = None
-
         for n in self.NODES.values():
             n.container.stop()
             n.container.remove()
 
+        os.remove(self.SEED_FILE)
         self.NODES.clear()
