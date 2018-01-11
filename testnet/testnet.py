@@ -91,7 +91,7 @@ class I2pd(object):
 class Testnet(object):
     """Testnet object"""
 
-    I2PD_IMAGE = "i2pd"
+    I2PD_IMAGE = "purplei2p/i2pd"
     NETNAME = 'i2pdtestnet'
     NODES = {}
     DEFAULT_ARGS = " --nat=false --netid=7 --ifname=eth0 " \
@@ -101,29 +101,37 @@ class Testnet(object):
     def __init__(self, docker_client):
         self.cli = docker_client
 
+        for cont in self.cli.containers.list(filters={"label": "i2pd"}):
+            self.NODES[cont.id[:12]] = I2pd(cont, self.NETNAME)
+
     def create_network(self):
         """Create isolated docker network"""
-        self.net = self.cli.networks.create(self.NETNAME, driver="bridge",
-                internal=True)
+        self.cli.networks.create(self.NETNAME, driver="bridge", internal=True)
 
     def remove_network(self):
         """Remove docker network"""
-        self.net.remove()
+        self.cli.networks.get(self.NETNAME).remove()
 
-    def run_i2pd(self, args=None, with_seed=True):
+    def run_i2pd(self, args=None, with_seed=True, floodfill=False):
         """Start i2pd"""
-        i2pd_args = self.DEFAULT_ARGS
+        i2pd_args, labels = self.DEFAULT_ARGS, ["i2pd"]
         if args: i2pd_args += args
 
+        if floodfill:
+            i2pd_args += " --floodfill "
+            labels += ["floodfill"]
+
         if with_seed:
+            i2pd_args += " --reseed.zipfile=/seed.zip "
             cont = self.cli.containers.run(self.I2PD_IMAGE, i2pd_args,
                     volumes=["{}:/seed.zip".format(self.SEED_FILE)],
-                    network=self.NETNAME, detach=True, tty=True)
+                    labels=labels, network=self.NETNAME, detach=True, tty=True)
         else:
+            labels += ["noseed"]
             cont = self.cli.containers.run(self.I2PD_IMAGE, i2pd_args,
-                    network=self.NETNAME, detach=True, tty=True)
+                    labels=labels, network=self.NETNAME, detach=True, tty=True)
         self.NODES[cont.id[:12]] = I2pd(cont, self.NETNAME)
-        return cont.id
+        return cont.id[:12]
 
     def remove_i2pd(self, cid):
         """Stop and remove i2pd"""
@@ -135,26 +143,18 @@ class Testnet(object):
         node.container.stop()
         node.container.remove()
 
-    def init_floodfills(self, count=1):
-        """Initialize floodfills for reseeding"""
-        for x in range(count):
-            self.run_i2pd(" --floodfill ", with_seed=False)
-
-    def make_seed(self):
+    def make_seed(self, cid):
         """creates a zip reseed file"""
-        floodfill_node = list(self.NODES.keys())[0]
-
         with tempfile.TemporaryFile() as fp:
-            fp.write(self.NODES[floodfill_node].container.get_archive(
+            fp.write(self.NODES[cid].container.get_archive(
                         "/home/i2pd/data/router.info")[0].read())
             fp.seek(0)
             ri_file = tarfile.open(fileobj=fp, mode='r:')\
                     .extractfile("router.info").read()
             tf = tempfile.mkstemp()[1]
             with open(tf, 'wb') as f: f.write(ri_file)
-
             zf = zipfile.ZipFile(self.SEED_FILE, "w")
-            zf.write(tf, "routerinfo.dat")
+            zf.write(tf, "ri.dat")
             zf.close()
             os.remove(tf)
 

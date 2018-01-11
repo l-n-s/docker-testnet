@@ -12,13 +12,13 @@ Install requirements and add your user to docker group ([security notes](https:/
     sudo apt install docker.io python3 python3-venv
     sudo gpasswd -a your-user docker
 
+Pull docker image:
+
+    sudo docker pull purplei2p/i2pd 
+
 Clone the repo: 
     
     git clone https://github.com/l-n-s/docker-testnet && cd docker-testnet
-
-Build docker images:
-
-    ./build/build_images.sh 
 
 Create virtual environment and install:
 
@@ -29,43 +29,38 @@ Create virtual environment and install:
 Usage
 -----
 
-Run with `testnet` command:
-
-    testnet
-
 Read help message:
 
-    testnet> help
+    testnetctl -h
     
-Start a network, this command creates 1 floodfill node and a reseed server: 
+Start a network: 
 
-    testnet> start
+    testnetctl start
 
 Add 5 floodfill nodes and 10 regular nodes:
 
-    testnet> add 5 ff
-    testnet> add 10
+    testnetctl add 5 --floodfill
+    testnetctl add 10
 
 Show network statistics overview:
 
-    testnet> stats
+    testnetctl status
 
 Show individual node information:
 
-    testnet> inspect d34db33f1001
+    testnetctl inspect d34db33f1001
     
 Remove couple of nodes:
 
-    testnet> remove d34db33f1001 3f1001d34db3
+    testnetctl remove d34db33f1001 3f1001d34db3
 
 Create I2P tunnel (options are specified exactly as `key=value` without spaces):
 
-    testnet> create_tunnel d34db33f1001 test-tunnel type=http host=127.0.0.1 port=8888 keys=test.dat
+    testnetctl create_tunnel d34db33f1001 test-tunnel type=http host=127.0.0.1 port=8888 keys=test.dat
 
 Stop a network and quit:
 
-    testnet> stop
-    testnet> quit
+    testnetctl stop
 
 
 Configuration

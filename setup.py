@@ -31,7 +31,7 @@ setup(
     install_requires=install_requires,
     entry_points={
         'console_scripts': [
-            'testnet=testnet.cli:main',
+            'testnetctl=testnet.ctl:main',
         ],
     }
 )

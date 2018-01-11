@@ -2,7 +2,9 @@ import json
 import requests
 import logging
 
-logging.captureWarnings(True)
+# Disabling annoying warnings
+requests.packages.urllib3.disable_warnings(
+        requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 INFO_REQUEST = {
     "i2p.router.uptime": "",
