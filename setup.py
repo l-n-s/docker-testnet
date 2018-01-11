@@ -10,7 +10,7 @@ with open("requirements.txt") as f:
 
 setup(
     name='testnet',
-    version='0.1',
+    version='0.2',
     description='Docker based i2pd testnet',
     long_description=long_description,
     author='Darnet Villain',
