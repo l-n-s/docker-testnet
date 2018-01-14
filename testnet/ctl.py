@@ -17,13 +17,24 @@ class TestnetCtl(object):
     def __init__(self, testnet):
         self.testnet = testnet
 
+    def _batch_run(self, count, floodfill):
+        """Run multiple instances of i2pd"""
+        for x in range(count):
+            print(self.testnet.run_i2pd(with_seed=True, floodfill=floodfill))
+
+        print("*** Added {} nodes".format(count))
+
     def start(self, args):
         """Start testnet"""
         if not self.testnet.NODES:
             self.testnet.create_network()
             cid = self.testnet.run_i2pd(args=' --reseed.threshold=0 ', 
                     floodfill=True, with_seed=False)
+            print(cid)
             self.testnet.make_seed(cid)
+
+            if args.floodfills: self._batch_run(args.floodfills, True)
+            if args.nodes:      self._batch_run(args.nodes,      False)
         print("*** Testnet is running")
 
     def status(self, args):
@@ -40,13 +51,7 @@ class TestnetCtl(object):
     def add(self, args):
         """Add node(s) to testnet"""
         if not self.testnet.NODES: return
-
-        for x in range(args.count):
-            cid = self.testnet.run_i2pd(with_seed=True,
-                    floodfill=args.floodfill)
-            print(cid)
-
-        print("*** Added {} nodes".format(args.count))
+        self._batch_run(args.count, args.floodfill)
 
     def remove(self, args):
         """Remove node(s) from testnet"""
@@ -103,6 +108,10 @@ def main():
     subparsers = parser.add_subparsers(title="actions",help="Command to execute")
 
     start_parser = subparsers.add_parser("start", description="Start a testnet")
+    add_nodes_parser.add_argument('-f', '--floodfills', type=int,
+            help="Number of floodfill nodes to start with")
+    add_nodes_parser.add_argument('-n', '--nodes', type=int,
+            help="Number of regular nodes to start with")
     start_parser.set_defaults(func=testnetctl.start)
 
     stop_parser = subparsers.add_parser("stop", description="Stop the testnet")
@@ -111,7 +120,7 @@ def main():
     status_parser = subparsers.add_parser("status", description="Show status")
     status_parser.set_defaults(func=testnetctl.status)
 
-    add_nodes_parser = subparsers.add_parser("add", description="Add i2pd nodes")
+    add_nodes_parser = subparsers.add_parser("add", description="Add new i2pd nodes")
     add_nodes_parser.add_argument('count', type=int, help="Number of nodes to add")
     add_nodes_parser.add_argument('-f', '--floodfill', action="store_true",
             help="Setup floodfill nodes")

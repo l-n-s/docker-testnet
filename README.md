@@ -37,6 +37,10 @@ Start a network:
 
     testnetctl start
 
+Or you may want to start a network with some nodes and floodfills:
+
+    testnetctl start --nodes 10 --floodfills 5
+
 Add 5 floodfill nodes and 10 regular nodes:
 
     testnetctl add 5 --floodfill
