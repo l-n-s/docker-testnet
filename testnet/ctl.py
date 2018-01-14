@@ -108,9 +108,9 @@ def main():
     subparsers = parser.add_subparsers(title="actions",help="Command to execute")
 
     start_parser = subparsers.add_parser("start", description="Start a testnet")
-    add_nodes_parser.add_argument('-f', '--floodfills', type=int,
+    start_parser.add_argument('-f', '--floodfills', type=int,
             help="Number of floodfill nodes to start with")
-    add_nodes_parser.add_argument('-n', '--nodes', type=int,
+    start_parser.add_argument('-n', '--nodes', type=int,
             help="Number of regular nodes to start with")
     start_parser.set_defaults(func=testnetctl.start)
 
