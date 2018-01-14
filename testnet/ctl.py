@@ -12,6 +12,8 @@ from testnet.testnet import Testnet
 
 __version__ = "0.2"
 
+log = logging.getLogger(__name__)
+
 class TestnetCtl(object):
 
     def __init__(self, testnet):
@@ -22,7 +24,7 @@ class TestnetCtl(object):
         for x in range(count):
             print(self.testnet.run_i2pd(with_seed=True, floodfill=floodfill))
 
-        print("*** Added {} nodes".format(count))
+        log.info("*** Added {} nodes".format(count))
 
     def start(self, args):
         """Start testnet"""
@@ -35,7 +37,7 @@ class TestnetCtl(object):
 
             if args.floodfills: self._batch_run(args.floodfills, True)
             if args.nodes:      self._batch_run(args.nodes,      False)
-        print("*** Testnet is running")
+        log.info("*** Testnet is running")
 
     def status(self, args):
         """Display testnet statistics"""
@@ -46,7 +48,7 @@ class TestnetCtl(object):
         if self.testnet.NODES:
             self.testnet.stop()
             self.testnet.remove_network()
-        print("*** Testnet stopped")
+        log.info("*** Testnet stopped")
 
     def add(self, args):
         """Add node(s) to testnet"""
@@ -59,7 +61,7 @@ class TestnetCtl(object):
             self.testnet.remove_i2pd(n)
             print(n)
 
-        print("*** Removed {} nodes".format(len(args.ids)))
+        log.info("*** Removed {} nodes".format(len(args.ids)))
 
     def inspect(self, args):
         """Show node information. Usage: inspect [id]"""
@@ -84,9 +86,7 @@ class TestnetCtl(object):
 
         node.add_tunnel(args.name, options)
         time.sleep(1)
-        print("*** Tunnel created: {}".format(node.tunnel_destinations()[-1]))
-
-log = logging.getLogger(__name__)
+        log.info("*** Tunnel created: {}".format(node.tunnel_destinations()[-1]))
 
 def main():
     cli = docker.DockerClient(base_url='unix://var/run/docker.sock', 
