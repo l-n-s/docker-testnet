@@ -21,8 +21,8 @@ class TestnetCtl(object):
         """Start testnet"""
         if not self.testnet.NODES:
             self.testnet.create_network()
-            cid = self.testnet.run_i2pd(floodfill=True, with_seed=False)
-            time.sleep(5)
+            cid = self.testnet.run_i2pd(args=' --reseed.threshold=0 ', 
+                    floodfill=True, with_seed=False)
             self.testnet.make_seed(cid)
         print("*** Testnet is running")
 

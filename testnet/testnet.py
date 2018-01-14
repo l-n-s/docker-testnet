@@ -4,6 +4,7 @@ import string
 import tarfile
 import zipfile
 import tempfile
+import time
 
 import requests
 
@@ -145,9 +146,16 @@ class Testnet(object):
 
     def make_seed(self, cid):
         """creates a zip reseed file"""
+        ri_path = "/home/i2pd/data/router.info"
+
+        while True:
+            result = self.NODES[cid].container.exec_run(
+                    "sh -c 'test {} && echo yes'".format(ri_path))
+            if result == b"yes\n": break
+            time.sleep(0.1)
+
         with tempfile.TemporaryFile() as fp:
-            fp.write(self.NODES[cid].container.get_archive(
-                        "/home/i2pd/data/router.info")[0].read())
+            fp.write(self.NODES[cid].container.get_archive(ri_path)[0].read())
             fp.seek(0)
             ri_file = tarfile.open(fileobj=fp, mode='r:')\
                     .extractfile("router.info").read()
