@@ -113,7 +113,8 @@ def main():
 
     add_nodes_parser = subparsers.add_parser("add", description="Add i2pd nodes")
     add_nodes_parser.add_argument('count', type=int, help="Number of nodes to add")
-    add_nodes_parser.add_argument('--floodfill', action="store_true", help="Setup floodfill nodes")
+    add_nodes_parser.add_argument('-f', '--floodfill', action="store_true",
+            help="Setup floodfill nodes")
     add_nodes_parser.set_defaults(func=testnetctl.add)
 
     remove_nodes_parser = subparsers.add_parser("remove", description="Remove specified i2pd nodes")
