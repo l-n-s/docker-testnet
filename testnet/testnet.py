@@ -40,7 +40,7 @@ class I2pd(object):
         """Fetch info from i2pcontrol"""
         try:
             return self.control.request("RouterInfo", 
-                    i2pcontrol.INFO_REQUEST)['result']
+                    i2pcontrol.INFO_METHODS["RouterInfo"])['result']
         except requests.exceptions.ConnectionError:
             return {}
 

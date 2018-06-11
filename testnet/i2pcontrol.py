@@ -6,18 +6,29 @@ import logging
 requests.packages.urllib3.disable_warnings(
         requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
-INFO_REQUEST = {
-    "i2p.router.uptime": "",
-    "i2p.router.net.status": "",
-    "i2p.router.netdb.knownpeers": "",
-    "i2p.router.netdb.activepeers": "",
-    "i2p.router.net.bw.inbound.1s": "",
-    "i2p.router.net.bw.outbound.1s": "",
-    "i2p.router.net.tunnels.participating": "",
-    "i2p.router.net.tunnels.successrate": "",
-    "i2p.router.net.total.received.bytes": "",
-    "i2p.router.net.total.sent.bytes": "",
+INFO_METHODS = {
+    "RouterInfo": {
+        "i2p.router.uptime": "",
+        "i2p.router.net.status": "",
+        "i2p.router.netdb.knownpeers": "",
+        "i2p.router.netdb.activepeers": "",
+        "i2p.router.net.bw.inbound.1s": "",
+        "i2p.router.net.bw.outbound.1s": "",
+        "i2p.router.net.tunnels.participating": "",
+        "i2p.router.net.tunnels.successrate": "",
+        "i2p.router.net.total.received.bytes": "",
+        "i2p.router.net.total.sent.bytes": "",
+    },
+    "ClientServicesInfo": {
+        "I2PTunnel": "",
+        "SOCKS": "",
+        "HTTPProxy": "",
+        "SAM": "",
+        "BOB": "",
+        "I2CP": "",
+    }
 }
+
 
 STATUS = [
     "OK",
