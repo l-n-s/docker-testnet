@@ -1,6 +1,5 @@
 import argparse
 import os
-import sys
 import time
 import warnings
 import logging
@@ -75,6 +74,8 @@ class TestnetCtl(object):
         pprint(node.info())
         print("\nResources:\n")
         pprint(node.URLS)
+        print("\nTunnels:\n")
+        pprint(node.tunnels)
 
     def create_tunnel(self, args):
         """Create I2P tunnel. Usage: create_tunnel [id] [name] [option=value] ..."""

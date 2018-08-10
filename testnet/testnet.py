@@ -35,6 +35,21 @@ class I2pd(object):
             },
         }
         self.control = i2pcontrol.I2PControl(self.URLS['Control'])
+        self._tunnels = {}
+
+    @property
+    def tunnels(self):
+        """Cached tunnels info"""
+        if not self._tunnels: self.get_tunnels_info()
+        return self._tunnels
+
+    def get_tunnels_info(self):
+        """Fetch tunnels info from i2pcontrol"""
+        try:
+            self._tunnels = self.control.request("ClientServicesInfo", 
+                    {"I2PTunnel": ""})['result']['I2PTunnel']
+        except requests.exceptions.ConnectionError:
+            pass
 
     def info(self):
         """Fetch info from i2pcontrol"""
@@ -75,6 +90,7 @@ class I2pd(object):
             ' >> /home/i2pd/data/tunnels.conf\''
         self.container.exec_run(cmd)
         self.container.exec_run("kill -HUP 1")
+        self._tunnels = {}
 
     def tunnel_destinations(self):
         """Get b32 destinations"""
