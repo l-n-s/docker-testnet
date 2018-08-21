@@ -174,7 +174,7 @@ class Testnet(object):
 
             fp.write(arc_data)
             fp.seek(0)
-            ri_file = tarfile.open(fileobj=fp, mode='r:')\
+            ri_file = tarfile.open(fileobj=fp, mode='r')\
                     .extractfile("router.info").read()
             tf = tempfile.mkstemp()[1]
             with open(tf, 'wb') as f: f.write(ri_file)
